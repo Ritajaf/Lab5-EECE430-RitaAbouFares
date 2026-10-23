@@ -1,57 +1,116 @@
-# Inventory AI Agent - Assignment 5
+# Inventory AI Agent
 
-Docker setup for the existing Django inventory AI agent.
+A Django web application for managing warehouse inventory through a conversational AI assistant. The assistant uses Google Gemini to interpret requests and calls inventory tools to read and update records stored in SQLite.
 
-## Build and run locally
+## Features
 
-1. Install and start Docker Desktop with Linux containers enabled.
-2. Open a terminal in this `inventory` folder, alongside `manage.py` and `Dockerfile`.
-3. Create `.env` from `.env.example` if it does not already exist. Set a valid key:
+- List inventory items and check stock quantities and unit prices.
+- Add new items and restock existing items.
+- Remove units from stock or delete an item entirely.
+- Set unit prices or adjust them by a percentage.
+- Keep conversation history within a browser session.
+- Reset the conversation using **Start over**.
 
-   ```text
-   GEMINI_API_KEY=your_actual_gemini_api_key
-   ```
+## Technologies
 
-4. Build the image and run the container:
+- Python 3.14
+- Django
+- Google Gen AI SDK
+- SQLite
+- Docker
 
-   ```console
-   docker build -t inventory-agent .
-   docker run -d --name inventory-agent -p 8000:8000 --env-file .env inventory-agent
-   ```
+Dependency versions are listed in `requirements.txt`.
 
-5. Open http://localhost:8000/ and use the inventory chat.
+## Getting Started
 
-The container applies the existing Django migrations before starting the server.
-It creates its own empty SQLite database. Your local database, virtual
-environment, and `.env` are excluded from the image and Git commits. The Gemini
-key is supplied only when the container runs.
+Clone the repository and open the project directory:
 
-To view startup logs or stop the container:
-
-```console
-docker logs inventory-agent
-docker stop inventory-agent
+```powershell
+git clone https://github.com/Ritajaf/Lab5-EECE430-RitaAbouFares.git
+cd Lab5-EECE430-RitaAbouFares
 ```
 
-## GitHub steps to complete yourself
+Create a local environment file:
 
-1. Push the contents of this `inventory` folder to a new GitHub repository.
-2. In that repository, open **Settings > Collaborators > Add people**, enter
-   `am38@aub.edu.lb`, and send the collaborator invitation.
-3. To build and run the application from GitHub, clone the new repository into
-   a different folder and enter it:
+```powershell
+Copy-Item .env.example .env
+```
 
-   ```console
-   git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git inventory-agent-from-github
-   cd inventory-agent-from-github
-   ```
+Set your Gemini API key in `.env`:
 
-4. Copy `.env.example` to `.env`, set your valid Gemini API key, then build and
-   run a separate image and container from the cloned files:
+```dotenv
+GEMINI_API_KEY=your_gemini_api_key
+```
 
-   ```console
-   docker build -t inventory-agent-from-github .
-   docker run -d --name inventory-agent-from-github -p 8001:8000 --env-file .env inventory-agent-from-github
-   ```
+The key must have access to the model configured in `chat/agent.py`. Keep `.env` local; it is excluded from Git and the Docker image.
 
-5. Open http://localhost:8001/ to verify the application built from GitHub.
+## Run with Docker
+
+Start Docker Desktop with Linux containers enabled, then build and run the application:
+
+```powershell
+docker build -t inventory-agent .
+docker run -d --name inventory-agent -p 8000:8000 --env-file .env inventory-agent
+```
+
+Open [http://localhost:8000](http://localhost:8000).
+
+The container applies the database migrations automatically before starting the Django development server. It starts with an empty inventory database, separate from any database used outside Docker. Data remains in that container when it is stopped and restarted; removing the container removes its database.
+
+View logs, stop the container, or restart it:
+
+```powershell
+docker logs inventory-agent
+docker stop inventory-agent
+docker start inventory-agent
+```
+
+## Run Locally
+
+Install Python 3.14, then run these commands in PowerShell:
+
+```powershell
+python -m venv venv
+.\venv\Scripts\python.exe -m pip install -r requirements.txt
+.\venv\Scripts\python.exe manage.py migrate
+.\venv\Scripts\python.exe manage.py runserver
+```
+
+Open [http://localhost:8000](http://localhost:8000). The local database is created as `db.sqlite3`.
+
+## Example Requests
+
+- "Add 20 hammers to the inventory."
+- "How many hammers are in stock?"
+- "Set the price of a hammer to 15.00."
+- "Increase the price of hammers by 10%."
+- "Remove 3 hammers from stock."
+- "List all inventory items."
+
+Use the same item name when referring to an existing record. Item lookups are case-insensitive.
+
+## Project Structure
+
+```text
+chat/
+  agent.py              Gemini interaction and tool execution
+  tools.py              Inventory operations and tool declarations
+  models.py             Inventory item model
+  views.py              Chat requests and session history
+  templates/chat.html   Chat interface
+  migrations/           Database schema migrations
+  tests.py              Inventory tests
+config/                 Django settings and URL configuration
+manage.py               Django management commands
+Dockerfile              Container build and startup configuration
+requirements.txt        Python dependencies
+.env.example            Environment configuration template
+```
+
+## Tests
+
+With the Python dependencies installed and `.env` configured:
+
+```powershell
+.\venv\Scripts\python.exe manage.py test
+```
